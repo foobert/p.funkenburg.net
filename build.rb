@@ -10,14 +10,6 @@ if File.exist?('.cache/imgcache')
 end
 $imgcache ||= Hash.new
 
-network = '/Volumes/daten1/pictures/p.funkenburg.net/albums'
-
-if Dir.exist?(network)
-    system('rsync', '-avz', '--delete', network, '.')
-else
-    puts "Network share #{network} not found. Won't sync images!"
-end
-
 def scan_albums
     puts 'Scan albums...'
     albums = Dir['albums/*'].map do |album_path|
