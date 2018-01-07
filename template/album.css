@@ -1,0 +1,42 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-column-gap: 5px;
+}
+
+.grid .picture {
+    margin-bottom: 5px;
+    padding: 0;
+}
+
+.grid .picture a {
+    display: block;
+    background-image: url("../../spinner.gif");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.grid .picture .padding {
+  content: "";
+  width: 1px;
+  margin-left: -1px;
+  float: left;
+  height: 0;
+}
+
+.grid .picture a::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.grid .picture img {
+    width: 100%;
+    height: auto;
+}
