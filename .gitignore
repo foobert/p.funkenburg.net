@@ -2,3 +2,7 @@ build
 .imgcache
 .cache
 albums
+dist
+lib
+node_modules
+.env

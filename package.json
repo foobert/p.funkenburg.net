@@ -1,0 +1,34 @@
+{
+  "name": "p.funkenburg.net",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf lib dist archive.zip",
+    "build": "mkdir -p lib && $(npm bin)/babel -d lib src",
+    "dist": "mkdir -p dist && cp package.json package-lock.json dist && cd dist && npm install --production && cp -r ../lib/* . && zip -r ../archive.zip *",
+    "upload": "aws lambda update-function-code --function-name pfunkenburgnet-process --zip-file fileb://archive.zip",
+    "refresh": "npm run build && npm run dist && npm run upload"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foobert/p.funkenburg.net.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/foobert/p.funkenburg.net/issues"
+  },
+  "homepage": "https://github.com/foobert/p.funkenburg.net#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2017": "^6.24.1",
+    "prettier": "1.10.2"
+  },
+  "dependencies": {
+    "gm": "^1.23.1"
+  }
+}
