@@ -1,11 +1,23 @@
-const AWS = require("aws-sdk");
-const s3 = new AWS.S3();
+const debug = require("debug")("p.funkenburg.net:index");
+const s3 = require("./s3");
 
 const preview = require("./preview");
 const metadata = require("./metadata");
+const single = require("./single");
+const album = require("./album");
 
-const createHandlers = [preview.create, metadata.create];
-const deleteHandlers = [preview.delete, metadata.delete];
+const createHandlers = [
+  preview.create,
+  metadata.create,
+  single.create,
+  album.create
+];
+const deleteHandlers = [
+  preview.delete,
+  metadata.delete,
+  single.delete,
+  album.delete
+];
 
 function parseSrcAndDst(record) {
   const srcBucket = record.s3.bucket.name;
@@ -32,7 +44,8 @@ async function handleCreate(record) {
     return;
   }
 
-  src.object = await s3
+  debug("fetch source object %s/%s", src.bucket, src.key);
+  src.obj = await s3
     .getObject({
       Bucket: src.bucket,
       Key: src.key
@@ -40,6 +53,7 @@ async function handleCreate(record) {
     .promise();
 
   for (let handler of createHandlers) {
+    debug("running %s", handler.name || handler);
     await handler(src, dst);
   }
 }
@@ -48,12 +62,12 @@ async function handleDelete(record) {
   const { src, dst } = parseSrcAndDst(record);
 
   for (let handler of deleteHandlers) {
+    debug("Delete %s", handler.name || handler);
     await handler(src, dst);
   }
 }
 
 exports.handler = async function(event, context, callback) {
-  // console.log(util.inspect(event, { depth: 5 }));
   try {
     for (let record of event.Records) {
       switch (record.eventName) {

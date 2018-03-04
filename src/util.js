@@ -7,6 +7,14 @@ function label(filename, label) {
   return path.join(dir, `${base}.${label}${ext}`);
 }
 
+function changeExt(filename, ext) {
+  return path.join(
+    path.dirname(filename),
+    path.basename(filename, path.extname(filename)) + ext
+  );
+}
+
 module.exports = {
-  label
+  label,
+  changeExt
 };
