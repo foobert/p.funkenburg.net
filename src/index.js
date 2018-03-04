@@ -1,10 +1,13 @@
 const debug = require("debug")("p.funkenburg.net:index");
+const yaml = require("js-yaml");
 const s3 = require("./s3");
 
 const preview = require("./preview");
 const metadata = require("./metadata");
 const single = require("./single");
 const album = require("./album");
+const home = require("./home");
+const cover = require("./cover");
 
 const createHandlers = [
   preview.create,
@@ -37,6 +40,17 @@ function parseSrcAndDst(record) {
 
 async function handleCreate(record) {
   let { src, dst } = parseSrcAndDst(record);
+
+  if (src.key.match(/meta\.yaml$/i)) {
+    debug("fetch %s/%s", src.bucket, src.key);
+    src.obj = await s3
+      .getObject({ Bucket: src.bucket, Key: src.key })
+      .promise();
+    src.body = yaml.safeLoad(src.obj.Body.toString("utf8"));
+    await cover.create(src, dst);
+    await home.create(src, dst);
+    return;
+  }
 
   const typeMatch = src.key.match(/\.(jpg|jpeg|png|gif)$/i);
   if (!typeMatch) {
