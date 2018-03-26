@@ -1,3 +1,6 @@
 build
+output
+albums*
+node_modules
 .imgcache
 .cache

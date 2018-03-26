@@ -57,10 +57,20 @@ async function handleCreate(record) {
     debug("fetch %s", src.path);
     src.obj = await fs.readFileAsync(src.path);
     src.body = yaml.safeLoad(src.obj.toString("utf8"));
-    await cover.create(src, dst);
-    log.success();
-    await home.create(src, dst);
-    log.success();
+    try {
+      await cover.create(src, dst);
+      log.success();
+    } catch (err) {
+      log.error(err);
+      debug("cover failed: %o", err);
+    }
+    try {
+      await home.create(src, dst);
+      log.success();
+    } catch (err) {
+      log.error(err);
+      debug("home failed: %o", err);
+    }
     log.print("📓");
     return;
   }
@@ -107,9 +117,12 @@ async function handleDelete(record) {
   log.print("🗑");
 }
 
-const queue = new PQueue({ concurrency: 1 });
+const queue = new PQueue({ concurrency: 4 });
 debug("starting watcher");
-const watcher = chokidar.watch(".", { cwd: "albums", awaitWriteFinish: true });
+const watcher = chokidar.watch(".", {
+  cwd: srcBaseDir,
+  awaitWriteFinish: true
+});
 watcher.on("add", path => {
   queue.add(() => handleCreate(path));
 });
