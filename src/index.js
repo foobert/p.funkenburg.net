@@ -14,14 +14,17 @@ const single = require("./single");
 const album = require("./album");
 const home = require("./home");
 const cover = require("./cover");
+const original = require("./original");
 
 const createHandlers = [
-  //preview.create,
-  //metadata.create
-  single.create
-  //album.create
+  original.create,
+  preview.create,
+  metadata.create,
+  single.create,
+  album.create
 ];
 const deleteHandlers = [
+  original.delete,
   preview.delete,
   metadata.delete,
   single.delete,

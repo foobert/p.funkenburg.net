@@ -17,7 +17,7 @@ body {
 
 .grid .picture a {
     display: block;
-    background-image: url("../../spinner.gif");
+    background-image: url("spinner.gif");
     background-repeat: no-repeat;
     background-position: center;
 }

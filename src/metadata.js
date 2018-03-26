@@ -37,13 +37,10 @@ async function parseMetadata(src) {
       : img.size.width / img.size.height * 100;
   const metadata = {
     path: src.key,
-    src:
-      "http://localhost:4572/p.funkenburg.net/" +
-      path.dirname(src.key) +
-      "/" +
-      path.basename(src.key),
+    src: path.basename(await etag(src, "src")),
     basename: path.basename(src.key, path.extname(src.key)),
-    preview: label(path.basename(src.key), "preview"),
+    preview: path.basename(await etag(src, "pre")),
+    single: path.basename(changeExt(await etag(src), ".html")),
     date: date,
     date_pretty: moment(date).format("YYYY-MM-DD"),
     exif: img.Properties,

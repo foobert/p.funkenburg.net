@@ -2,8 +2,8 @@
     <head>
         <meta charset="utf-8">
         <title>{{meta.h1}} - Funkenburg Photos</title>
-        <link rel="stylesheet" href="../../album.css"/>
-        <link rel="stylesheet" href="../../header.css"/>
+        <link rel="stylesheet" href="../album.css"/>
+        <link rel="stylesheet" href="../header.css"/>
         <script>
             window.lazyLoadOptions = {};
         </script>
@@ -27,7 +27,7 @@
                 {{#pictures1}}
                 <div class="picture">
                     <span class="padding" style="padding-top: {{ratio}}%"></span>
-                    <a href="{{basename}}.html">
+                    <a href="{{single}}">
                         <img data-src="{{preview}}"/>
                     </a>
                 </div>
@@ -38,7 +38,7 @@
                 {{#pictures2}}
                 <div class="picture">
                     <span class="padding" style="padding-top: {{ratio}}%"></span>
-                    <a href="{{basename}}.html">
+                    <a href="{{single}}">
                         <img data-src="{{preview}}"/>
                     </a>
                 </div>
@@ -49,7 +49,7 @@
                 {{#pictures3}}
                 <div class="picture">
                     <span class="padding" style="padding-top: {{ratio}}%"></span>
-                    <a href="{{basename}}.html">
+                    <a href="{{single}}">
                         <img data-src="{{preview}}"/>
                     </a>
                 </div>
@@ -60,13 +60,13 @@
                 {{#pictures4}}
                 <div class="picture">
                     <span class="padding" style="padding-top: {{ratio}}%"></span>
-                    <a href="{{basename}}.html">
+                    <a href="{{single}}">
                         <img data-src="{{preview}}"/>
                     </a>
                 </div>
                 {{/pictures4}}
             </div>
         </div>
-        <script async src="../../lazyload.min.js"></script>
+        <script async src="../lazyload.min.js"></script>
     </body>
 </html>
