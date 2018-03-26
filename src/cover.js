@@ -1,8 +1,13 @@
-const debug = require("debug")("p.funkenburg.net:debug");
-const yaml = require("js-yaml");
+const debug = require("debug")("p.funkenburg.net:cover");
+const fs = require("fs");
 const gm = require("gm").subClass({ imageMagick: true });
 const path = require("path");
-const s3 = require("./s3");
+const util = require("util");
+const yaml = require("js-yaml");
+const { exists } = require("./util");
+
+fs.readFileAsync = util.promisify(fs.readFile);
+fs.writeFileAsync = util.promisify(fs.writeFile);
 
 function parseKeys(src, cover) {
   const srcKey = path.join(path.dirname(src.key), cover);
@@ -20,18 +25,19 @@ async function createCover(src, dst) {
   }
 
   const { srcKey, dstKey } = parseKeys(src, meta.cover);
+  const srcPath = path.join(src.bucket, srcKey);
+  const dstPath = path.join(dst.bucket, dstKey);
+
+  if (await exists(dstPath)) {
+    debug("skipping cover to %s", dstPath);
+    return;
+  }
 
   debug("load source image");
-  const coverObject = await s3
-    .getObject({
-      Bucket: src.bucket,
-      Key: srcKey
-    })
-    .promise();
-  const contentType = coverObject.ContentType;
+  const coverObject = await fs.readFileAsync(srcPath);
   const data = await new Promise((accept, reject) => {
     debug("resizing image");
-    gm(coverObject.Body)
+    gm(coverObject)
       .resize("1102x620^")
       .gravity("Center")
       .crop(1102, 620, 0, 0)
@@ -45,15 +51,8 @@ async function createCover(src, dst) {
       });
   });
 
-  debug("upload cover image to %s/%s", dst.bucket, dstKey);
-  await s3
-    .putObject({
-      Bucket: dst.bucket,
-      Key: dstKey,
-      ContentType: contentType,
-      Body: data
-    })
-    .promise();
+  debug("upload cover image to %s", dstPath);
+  await fs.writeFileAsync(dstPath, data);
 
   debug("cover done");
 }

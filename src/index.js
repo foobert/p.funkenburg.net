@@ -50,14 +50,15 @@ async function handleCreate(record) {
   let { src, dst } = parseSrcAndDst(record);
 
   if (src.path.match(/meta\.yaml$/i)) {
-    return;
     debug("fetch %s", src.path);
     src.obj = await fs.readFileAsync(src.path);
-    src.body = yaml.safeLoad(src.obj.Body.toString("utf8"));
+    src.body = yaml.safeLoad(src.obj.toString("utf8"));
     await cover.create(src, dst);
     await home.create(src, dst);
     return;
   }
+
+  return;
 
   const typeMatch = src.path.match(/\.(jpg|jpeg|png|gif)$/i);
   if (!typeMatch) {
