@@ -5,6 +5,8 @@ const util = require("util");
 const yaml = require("js-yaml");
 const path = require("path");
 const PQueue = require("p-queue");
+const { sha1 } = require("./etag");
+const createLog = require("./console");
 
 fs.readFileAsync = util.promisify(fs.readFile);
 
@@ -48,36 +50,42 @@ function parseSrcAndDst(record) {
 
 async function handleCreate(record) {
   let { src, dst } = parseSrcAndDst(record);
+  let log = createLog(src, dst);
 
   if (src.path.match(/meta\.yaml$/i)) {
     debug("fetch %s", src.path);
     src.obj = await fs.readFileAsync(src.path);
     src.body = yaml.safeLoad(src.obj.toString("utf8"));
     await cover.create(src, dst);
+    log.success();
     await home.create(src, dst);
+    log.success();
+    log.print();
     return;
   }
 
   const typeMatch = src.path.match(/\.(jpg|jpeg|png|gif)$/i);
   if (!typeMatch) {
-    console.log(
-      `Could not determine the image type of "${src.path}", ignoring event.`
-    );
+    debug("ignore %s", src.path);
     return;
   }
 
   debug("fetch source object %s", src.path);
   src.obj = await fs.readFileAsync(src.path);
+  src.sha1 = await sha1(src.obj);
 
   for (let handler of createHandlers) {
     const name = handler.name || handler;
-    debug("running %s", name);
     try {
       await handler(src, dst);
+      log.success();
     } catch (err) {
-      console.log("error during " + name, err);
+      debug("%s failed: %o", name, err);
+      log.error(err);
     }
   }
+
+  log.print();
 }
 
 async function handleDelete(record) {

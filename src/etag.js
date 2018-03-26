@@ -9,7 +9,7 @@ async function sha1(data) {
 }
 
 async function etag(src, label) {
-  let hash = await sha1(src.obj);
+  let hash = src.sha1;
   let dir = path.dirname(src.key);
   let ext = path.extname(src.key);
   if (label) {
