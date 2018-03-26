@@ -20,7 +20,7 @@ function mapStats(stats) {
       stats[stats.length - 1].time
     )
   );
-  const width = process.stdout.columns - 40;
+  const width = process.stdout.columns - 45;
   const parts = percentages.map(s => Math.floor(s * width));
   const sum = parts.reduce((s, x) => s + x, 0);
   const line = parts
@@ -53,11 +53,12 @@ function log(src, dst) {
     error: function(err) {
       stats.push({ time: process.hrtime(start), err });
     },
-    print: function() {
+    print: function(prefix) {
       stats.push({ time: process.hrtime(start) });
       const millis = getMillis(stats);
       const rainbow = mapStats(stats);
       console.log(
+        chalk.green(prefix || "?"),
         src.key.padStart(30),
         mapMillis(millis)(millis.toFixed(0).padStart(5) + " ms"),
         rainbow

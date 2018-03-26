@@ -1,12 +1,13 @@
+const PQueue = require("p-queue");
+const chalk = require("chalk");
 const chokidar = require("chokidar");
+const createLog = require("./console");
 const debug = require("debug")("p.funkenburg.net:index");
 const fs = require("fs");
+const path = require("path");
 const util = require("util");
 const yaml = require("js-yaml");
-const path = require("path");
-const PQueue = require("p-queue");
 const { sha1 } = require("./etag");
-const createLog = require("./console");
 
 fs.readFileAsync = util.promisify(fs.readFile);
 
@@ -60,7 +61,7 @@ async function handleCreate(record) {
     log.success();
     await home.create(src, dst);
     log.success();
-    log.print();
+    log.print("📓");
     return;
   }
 
@@ -85,21 +86,28 @@ async function handleCreate(record) {
     }
   }
 
-  log.print();
+  log.print("🌅");
 }
 
 async function handleDelete(record) {
   const { src, dst } = parseSrcAndDst(record);
   debug("src: %o", src);
   debug("dst: %o", dst);
+  let log = createLog(src, dst);
 
   for (let handler of deleteHandlers) {
     debug("Delete %s", handler.name || handler);
-    await handler(src, dst);
+    try {
+      await handler(src, dst);
+      log.sucess();
+    } catch (err) {
+      log.error(err);
+    }
   }
+  log.print("🗑");
 }
 
-const queue = new PQueue({ concurrency: 4 });
+const queue = new PQueue({ concurrency: 1 });
 debug("starting watcher");
 const watcher = chokidar.watch(".", { cwd: "albums", awaitWriteFinish: true });
 watcher.on("add", path => {
@@ -111,4 +119,6 @@ watcher.on("change", path => {
 watcher.on("unlink", path => {
   queue.add(() => handleDelete(path));
 });
-watcher.on("ready", () => debug("Ready"));
+watcher.on("ready", () =>
+  queue.add(async () => console.log(chalk`{green 👀} ${"ready".padStart(30)}`))
+);
