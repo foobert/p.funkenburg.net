@@ -1,15 +1,11 @@
 {
   "name": "p.funkenburg.net",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -rf lib dist archive.zip",
-    "build": "mkdir -p lib && $(npm bin)/babel -d lib src",
-    "dist": "mkdir -p dist && cp package.json package-lock.json dist && cd dist && npm install --production && cp -r ../lib/* . && zip -r ../archive.zip *",
-    "upload": "aws lambda update-function-code --function-name pfunkenburgnet-process --zip-file fileb://archive.zip",
-    "refresh": "npm run build && npm run dist && npm run upload"
+    "start": "node src/index.js"
   },
   "repository": {
     "type": "git",
@@ -22,25 +18,17 @@
   },
   "homepage": "https://github.com/foobert/p.funkenburg.net#readme",
   "devDependencies": {
-    "aws-sdk": "^2.205.0",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-es2017": "^6.24.1",
-    "prettier": "1.10.2",
-    "s3rver": "^2.2.0"
+    "prettier": "1.10.2"
   },
   "dependencies": {
     "chalk": "^2.3.2",
     "chokidar": "^2.0.3",
-    "colors": "^1.2.1",
     "debug": "^3.1.0",
     "gm": "^1.23.1",
     "js-yaml": "^3.10.0",
     "mkdirp-promise": "^5.0.1",
     "moment": "^2.20.1",
     "mustache": "^2.3.0",
-    "p-queue": "^2.3.1",
-    "watchr": "^4.0.1"
+    "p-queue": "^2.3.1"
   }
 }
