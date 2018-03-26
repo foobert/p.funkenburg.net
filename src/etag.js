@@ -14,6 +14,8 @@ async function etag(src, label) {
   let ext = path.extname(src.key);
   if (label) {
     label = "-" + label;
+  } else {
+    label = "";
   }
   return path.join(dir, hash + label + ext.toLowerCase());
 }

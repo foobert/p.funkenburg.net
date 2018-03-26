@@ -16,8 +16,8 @@ const home = require("./home");
 const cover = require("./cover");
 
 const createHandlers = [
-  preview.create
-  //metadata.create,
+  //preview.create,
+  metadata.create
   //single.create,
   //album.create
 ];

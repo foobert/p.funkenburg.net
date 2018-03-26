@@ -1,21 +1,25 @@
 const debug = require("debug")("p.funkenburg.net:metadata");
+const fs = require("fs");
 const gm = require("gm").subClass({ imageMagick: true });
+const mkdirp = require("mkdirp-promise");
 const moment = require("moment");
 const path = require("path");
-const { label, changeExt } = require("./util");
-const s3 = require("./s3");
+const util = require("util");
+const { etag } = require("./etag");
+const { label, changeExt, exists } = require("./util");
 
-// gm identify is super slow, so we do a stupid in-memory cache here
-const metadataCache = {};
+fs.writeFileAsync = util.promisify(fs.writeFile);
+fs.statAsync = util.promisify(fs.stat);
+
+async function getMtime(filename) {
+  let s = await fs.statAsync(filename);
+  return s.mtime;
+}
 
 async function parseMetadata(src) {
   debug("parse metadata");
-  if (metadataCache[src]) {
-    debug("metadata cache hit");
-    return metadataCache[src];
-  }
   const img = await new Promise((accept, reject) => {
-    gm(src.obj.Body).identify((err, value) => {
+    gm(src.obj).identify((err, value) => {
       if (err) {
         reject(err);
       } else {
@@ -26,7 +30,7 @@ async function parseMetadata(src) {
 
   const date = img.Properties["exif:DateTimeOriginal"]
     ? moment(img.Properties["exif:DateTimeOriginal"], "YYYY:MM:DD HH:mm:ss")
-    : moment(src.obj.LastModified);
+    : moment(getMtime(src.path));
   const ratio =
     img.size.width > img.size.height
       ? img.size.height / img.size.width * 100
@@ -47,24 +51,22 @@ async function parseMetadata(src) {
     height: img.size.height,
     ratio: ratio
   };
-  metadataCache[src] = metadata;
   return metadata;
 }
 
 async function createMetadata(src, dst) {
   debug("create metadata");
-  const dstKey = changeExt(src.key, ".json");
-  const metadata = await parseMetadata(src);
-  debug("upload metadata to %s/%s", dst.bucket, dstKey);
-  await s3
-    .putObject({
-      Bucket: dst.bucket,
-      Key: dstKey,
-      Body: JSON.stringify(metadata),
-      ContentType: "application/json"
-    })
-    .promise();
+  const dstKey = changeExt(await etag(src), ".json");
+  const dstPath = path.join(dst.bucket, dstKey);
+  if (await exists(dstPath)) {
+    debug("skip metadata to %s", dstPath);
+    return;
+  }
 
+  const metadata = await parseMetadata(src);
+  debug("upload metadata to %s", dstPath);
+  await mkdirp(path.dirname(dstPath));
+  await fs.writeFileAsync(dstPath, JSON.stringify(metadata), "utf8");
   debug("metadata done");
   //console.log(`metadata: ${src.bucket}/${src.key} -> ${dst.bucket}/${dstKey}`);
 }

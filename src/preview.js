@@ -1,14 +1,13 @@
 const debug = require("debug")("p.funkenburg.net:preview");
 const fs = require("fs");
 const gm = require("gm").subClass({ imageMagick: true });
+const mkdirp = require("mkdirp-promise");
 const path = require("path");
 const util = require("util");
-const { label } = require("./util");
-fs.writeFileAsync = util.promisify(fs.writeFile);
-fs.statAsync = util.promisify(fs.stat);
-fs.mkdirAsync = util.promisify(fs.mkdir);
-const mkdirp = require("mkdirp-promise");
 const { etag } = require("./etag");
+const { label, exists } = require("./util");
+
+fs.writeFileAsync = util.promisify(fs.writeFile);
 
 async function createPreview(src, dst) {
   debug("create preview");
@@ -16,14 +15,9 @@ async function createPreview(src, dst) {
   let dstPath = path.join(dst.bucket, dstKey);
   let dstDir = path.dirname(dstPath);
 
-  try {
-    let dstStat = await fs.statAsync(dstPath);
-    if (dstStat.isFile()) {
-      debug("skip preview to %s", dstPath);
-      return;
-    }
-  } catch (err) {
-    // probably just ENOENT
+  if (await exists(dstPath)) {
+    debug("skip preview to %s", dstPath);
+    return;
   }
 
   let data = await new Promise((accept, reject) => {

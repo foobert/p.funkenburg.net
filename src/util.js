@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 
 function label(filename, label) {
@@ -14,7 +15,22 @@ function changeExt(filename, ext) {
   );
 }
 
+function exists(filename) {
+  return new Promise((accept, reject) => {
+    fs.stat(filename, err => {
+      if (err && err.code === "ENOENT") {
+        accept(false);
+      } else if (err) {
+        reject(err);
+      } else {
+        accept(true);
+      }
+    });
+  });
+}
+
 module.exports = {
   label,
-  changeExt
+  changeExt,
+  exists
 };
