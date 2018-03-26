@@ -1,27 +1,33 @@
 const debug = require("debug")("p.funkenburg.net:single");
 const fs = require("fs");
+const mkdirp = require("mkdirp-promise");
 const mustache = require("mustache");
+const path = require("path");
 const util = require("util");
+const { changeExt, exists } = require("./util");
 const { parse: parseMetadata } = require("./metadata");
-const { changeExt } = require("./util");
-const s3 = require("./s3");
-fs.readFile = util.promisify(fs.readFile);
+const { etag } = require("./etag");
+
+fs.readFileAsync = util.promisify(fs.readFile);
+fs.writeFileAsync = util.promisify(fs.writeFile);
 
 async function createSingleHtml(src, dst) {
   debug("create single image page");
-  const template = await fs.readFile("template/single.html", "utf8");
+  const dstKey = changeExt(await etag(src), ".html");
+  const dstPath = path.join(dst.bucket, dstKey);
+  const dstDir = path.dirname(dstPath);
+
+  if (await exists(dstPath)) {
+    debug("skip single to %s", dstPath);
+    return;
+  }
+
+  const template = await fs.readFileAsync("template/single.html", "utf8");
   const metadata = await parseMetadata(src);
-  const dstKey = changeExt(src.key, ".html");
   const rendered = mustache.render(template, metadata);
-  debug("upload html to %s/%s", dst.bucket, dstKey);
-  await s3
-    .putObject({
-      Bucket: dst.bucket,
-      Key: dstKey,
-      Body: rendered,
-      ContentType: "text/html"
-    })
-    .promise();
+  debug("upload html to %s", dstPath);
+  await mkdirp(dstDir);
+  await fs.writeFileAsync(dstPath, rendered, "utf8");
 
   debug("single done");
   //console.log(`${src.bucket}/${src.key} -> ${dst.bucket}/${dstKey}`);

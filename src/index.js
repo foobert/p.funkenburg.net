@@ -17,8 +17,8 @@ const cover = require("./cover");
 
 const createHandlers = [
   //preview.create,
-  metadata.create
-  //single.create,
+  //metadata.create
+  single.create
   //album.create
 ];
 const deleteHandlers = [
