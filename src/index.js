@@ -4,12 +4,15 @@ const chokidar = require("chokidar");
 const createLog = require("./console");
 const debug = require("debug")("p.funkenburg.net:index");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const util = require("util");
 const yaml = require("js-yaml");
+const { exists } = require("./util");
 const { sha1 } = require("./etag");
 
 fs.readFileAsync = util.promisify(fs.readFile);
+fs.copyFileAsync = util.promisify(fs.copyFile);
 
 const preview = require("./preview");
 const metadata = require("./metadata");
@@ -34,8 +37,14 @@ const deleteHandlers = [
   album.delete
 ];
 
-const srcBaseDir = "albums";
-const dstBaseDir = "output";
+const srcBaseDir = process.env.SRC || "albums";
+const dstBaseDir = process.env.DST || "output";
+const concurrency =
+  parseInt(process.env.CORES) || Math.max(1, os.cpus().length - 1);
+
+console.log(`📂 ${srcBaseDir.padStart(30)}`);
+console.log(`🗃 ${dstBaseDir.padStart(30)}`);
+console.log(`🔥 ${concurrency.toString().padStart(30)}`);
 
 function parseSrcAndDst(record) {
   // record should be just the src path?
@@ -117,7 +126,28 @@ async function handleDelete(record) {
   log.print("🗑");
 }
 
-const queue = new PQueue({ concurrency: 4 });
+async function copyStatics() {
+  const filenames = [
+    "album.css",
+    "favicon.ico",
+    "header.css",
+    "index.css",
+    "index.js",
+    "lazyload.min.js",
+    "single.css",
+    "spinner.gif"
+  ];
+  for (const filename of filenames) {
+    if (!await exists(path.join(dstBaseDir, filename))) {
+      await fs.copyFileAsync(
+        path.join("template", filename),
+        path.join(dstBaseDir, filename)
+      );
+    }
+  }
+}
+
+const queue = new PQueue({ concurrency });
 debug("starting watcher");
 const watcher = chokidar.watch(".", {
   cwd: srcBaseDir,
@@ -132,6 +162,7 @@ watcher.on("change", path => {
 watcher.on("unlink", path => {
   queue.add(() => handleDelete(path));
 });
-watcher.on("ready", () =>
-  queue.add(async () => console.log(chalk`{green 👀} ${"ready".padStart(30)}`))
-);
+watcher.on("ready", () => {
+  queue.add(copyStatics);
+  queue.add(async () => console.log(chalk`{green 👀} ${"ready".padStart(30)}`));
+});
