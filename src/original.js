@@ -6,6 +6,7 @@ const util = require("util");
 const { etag } = require("./etag");
 const { exists } = require("./util");
 
+fs.copyFileAsync = util.promisify(fs.copyFile);
 fs.symlinkAsync = util.promisify(fs.symlink);
 fs.unlinkAsync = util.promisify(fs.unlink);
 
@@ -17,14 +18,8 @@ async function createOriginal(src, dst) {
     return;
   }
 
-  const target = path.join(
-    path.relative(path.dirname(dstPath), path.dirname(src.bucket)),
-    src.path
-  );
-  debug("relative: %s -> %s: %s", dstPath, src.path, target);
-
   await mkdirp(path.dirname(dstPath));
-  await fs.symlinkAsync(target, dstPath);
+  await fs.copyFileAsync(src.path, dstPath);
 }
 
 async function deleteOriginal() {
