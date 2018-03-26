@@ -5,13 +5,14 @@ const mkdirp = require("mkdirp-promise");
 const path = require("path");
 const util = require("util");
 const { etag } = require("./etag");
-const { label, exists } = require("./util");
+const { exists } = require("./util");
 
 fs.writeFileAsync = util.promisify(fs.writeFile);
+fs.unlinkAsync = util.promisify(fs.unlink);
 
 async function createPreview(src, dst) {
   debug("create preview");
-  let dstKey = await etag(src, "pre"); //label(src.key, "preview");
+  let dstKey = await etag(src, "pre");
   let dstPath = path.join(dst.bucket, dstKey);
   let dstDir = path.dirname(dstPath);
 
@@ -42,14 +43,8 @@ async function createPreview(src, dst) {
   debug("preview done");
 }
 
-async function deletePreview(src, dst) {
-  let key = label(src.key, "preview");
-  await s3
-    .deleteObject({
-      Bucket: dst.bucket,
-      Key: key
-    })
-    .promise();
+async function deletePreview() {
+  // nop, rely on GC instead
 }
 
 module.exports = {

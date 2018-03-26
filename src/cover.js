@@ -3,8 +3,7 @@ const fs = require("fs");
 const gm = require("gm").subClass({ imageMagick: true });
 const path = require("path");
 const util = require("util");
-const yaml = require("js-yaml");
-const { exists } = require("./util");
+const { exists, tryUnlink } = require("./util");
 
 fs.readFileAsync = util.promisify(fs.readFile);
 fs.writeFileAsync = util.promisify(fs.writeFile);
@@ -60,7 +59,7 @@ async function createCover(src, dst) {
 async function deleteCover(src, dst) {
   debug("delete cover");
   const { dstKey } = parseKeys(src);
-  await s3.deleteObject({ Bucket: dst.bucket, Key: dstKey }).promise();
+  await tryUnlink(path.join(dst.bucket, dstKey));
 }
 
 module.exports = {

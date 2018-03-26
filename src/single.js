@@ -10,6 +10,7 @@ const { etag } = require("./etag");
 
 fs.readFileAsync = util.promisify(fs.readFile);
 fs.writeFileAsync = util.promisify(fs.writeFile);
+fs.unlinkAsync = util.promisify(fs.unlink);
 
 async function createSingleHtml(src, dst) {
   debug("create single image page");
@@ -33,14 +34,8 @@ async function createSingleHtml(src, dst) {
   //console.log(`${src.bucket}/${src.key} -> ${dst.bucket}/${dstKey}`);
 }
 
-async function deleteSingleHtml(src, dst) {
-  const dstKey = changeExt(src.key, ".html");
-  await s3
-    .deleteObject({
-      Bucket: dst.bucket,
-      Key: dstKey
-    })
-    .promise();
+async function deleteSingleHtml() {
+  // nop, rely on GC instead
 }
 
 module.exports = {

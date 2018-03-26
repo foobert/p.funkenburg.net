@@ -6,10 +6,12 @@ const moment = require("moment");
 const path = require("path");
 const util = require("util");
 const { etag } = require("./etag");
-const { label, changeExt, exists } = require("./util");
+const { label, changeExt, exists, tryUnlink } = require("./util");
 
 fs.writeFileAsync = util.promisify(fs.writeFile);
 fs.statAsync = util.promisify(fs.stat);
+fs.unlinkAsync = util.promisify(fs.unlink);
+fs.symlinkAsync = util.promisify(fs.symlink);
 
 async function getMtime(filename) {
   let s = await fs.statAsync(filename);
@@ -55,6 +57,13 @@ async function createMetadata(src, dst) {
   debug("create metadata");
   const dstKey = changeExt(await etag(src), ".json");
   const dstPath = path.join(dst.bucket, dstKey);
+
+  const target = label(changeExt(path.basename(src.key), ".json"), "meta");
+  const linkPath = path.join(path.dirname(dstPath), target);
+  if (!await exists(linkPath)) {
+    await fs.symlinkAsync(path.basename(dstPath), linkPath);
+  }
+
   if (await exists(dstPath)) {
     debug("skip metadata to %s", dstPath);
     return;
@@ -64,18 +73,19 @@ async function createMetadata(src, dst) {
   debug("upload metadata to %s", dstPath);
   await mkdirp(path.dirname(dstPath));
   await fs.writeFileAsync(dstPath, JSON.stringify(metadata), "utf8");
+
   debug("metadata done");
   //console.log(`metadata: ${src.bucket}/${src.key} -> ${dst.bucket}/${dstKey}`);
 }
 
 async function deleteMetadata(src, dst) {
-  const dstKey = changeExt(src.key, ".json");
-  await s3
-    .deleteObject({
-      Bucket: dst.bucket,
-      Key: dstKey
-    })
-    .promise();
+  const target = path.join(
+    dst.bucket,
+    path.dirname(src.key),
+    label(changeExt(path.basename(src.key), ".json"), "meta")
+  );
+  debug("unlink: %s", target);
+  await tryUnlink(target);
 }
 
 module.exports = {

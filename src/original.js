@@ -7,6 +7,7 @@ const { etag } = require("./etag");
 const { exists } = require("./util");
 
 fs.symlinkAsync = util.promisify(fs.symlink);
+fs.unlinkAsync = util.promisify(fs.unlink);
 
 async function createOriginal(src, dst) {
   const dstKey = await etag(src, "src");
@@ -26,7 +27,9 @@ async function createOriginal(src, dst) {
   await fs.symlinkAsync(target, dstPath);
 }
 
-async function deleteOriginal(src, dst) {}
+async function deleteOriginal() {
+  // nop, rely on GC instead
+}
 
 module.exports = {
   create: createOriginal,

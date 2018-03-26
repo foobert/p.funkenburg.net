@@ -27,7 +27,7 @@ async function createAlbum(src, dst) {
   const files = await fs.readDirAsync(dstDir);
   let jsonObjects = await Promise.all(
     files
-      .filter(f => f.endsWith(".json"))
+      .filter(f => f.endsWith("-meta.json"))
       .map(f => fs.readFileAsync(path.join(dstDir, f), "utf8"))
   );
   let images = jsonObjects.map(obj => JSON.parse(obj)).sort((a, b) => {
@@ -72,17 +72,7 @@ async function createAlbum(src, dst) {
   debug("album done");
 }
 
-async function deleteAlbum(src, dst) {
-  const dstKey = path.join(path.dirname(src.key), "index.html");
-  await s3
-    .deleteObject({
-      Bucket: dst.bucket,
-      Key: dstKey
-    })
-    .promise();
-}
-
 module.exports = {
   create: createAlbum,
-  delete: deleteAlbum
+  delete: createAlbum
 };

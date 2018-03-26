@@ -58,8 +58,6 @@ async function handleCreate(record) {
     return;
   }
 
-  return;
-
   const typeMatch = src.path.match(/\.(jpg|jpeg|png|gif)$/i);
   if (!typeMatch) {
     console.log(
@@ -86,7 +84,6 @@ async function handleDelete(record) {
   const { src, dst } = parseSrcAndDst(record);
   debug("src: %o", src);
   debug("dst: %o", dst);
-  return;
 
   for (let handler of deleteHandlers) {
     debug("Delete %s", handler.name || handler);
@@ -100,7 +97,10 @@ const watcher = chokidar.watch(".", { cwd: "albums", awaitWriteFinish: true });
 watcher.on("add", path => {
   queue.add(() => handleCreate(path));
 });
-watcher.on("delete", path => {
+watcher.on("change", path => {
+  queue.add(() => handleCreate(path));
+});
+watcher.on("unlink", path => {
   queue.add(() => handleDelete(path));
 });
 watcher.on("ready", () => debug("Ready"));
