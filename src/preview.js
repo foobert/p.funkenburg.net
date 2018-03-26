@@ -1,15 +1,34 @@
 const debug = require("debug")("p.funkenburg.net:preview");
+const fs = require("fs");
 const gm = require("gm").subClass({ imageMagick: true });
+const path = require("path");
+const util = require("util");
 const { label } = require("./util");
-const s3 = require("./s3");
+fs.writeFileAsync = util.promisify(fs.writeFile);
+fs.statAsync = util.promisify(fs.stat);
+fs.mkdirAsync = util.promisify(fs.mkdir);
+const mkdirp = require("mkdirp-promise");
+const { etag } = require("./etag");
 
 async function createPreview(src, dst) {
   debug("create preview");
-  let dstKey = label(src.key, "preview");
-  let contentType = src.obj.ContentType;
+  let dstKey = await etag(src, "pre"); //label(src.key, "preview");
+  let dstPath = path.join(dst.bucket, dstKey);
+  let dstDir = path.dirname(dstPath);
+
+  try {
+    let dstStat = await fs.statAsync(dstPath);
+    if (dstStat.isFile()) {
+      debug("skip preview to %s", dstPath);
+      return;
+    }
+  } catch (err) {
+    // probably just ENOENT
+  }
+
   let data = await new Promise((accept, reject) => {
     debug("resizing image");
-    gm(src.obj.Body)
+    gm(src.obj)
       .resize(480)
       .toBuffer((err, buffer) => {
         if (err) {
@@ -21,20 +40,9 @@ async function createPreview(src, dst) {
       });
   });
 
-  debug(
-    "upload preview image to %s/%s (%d b)",
-    dst.bucket,
-    dstKey,
-    data.length
-  );
-  await s3
-    .putObject({
-      Bucket: dst.bucket,
-      Key: dstKey,
-      Body: data,
-      ContentType: contentType
-    })
-    .promise();
+  debug("upload preview image to %s (%d b)", dstPath, data.length);
+  await mkdirp(dstDir);
+  await fs.writeFileAsync(dstPath, data);
 
   //console.log(`preview: ${src.bucket}/${src.key} -> ${dst.bucket}/${dstKey}`);
   debug("preview done");
