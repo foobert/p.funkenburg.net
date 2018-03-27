@@ -4,8 +4,7 @@ const mkdirp = require("mkdirp-promise");
 const mustache = require("mustache");
 const path = require("path");
 const util = require("util");
-const { changeExt, exists } = require("./util");
-const { parse: parseMetadata } = require("./metadata");
+const { changeExt } = require("./util");
 const { etag } = require("./etag");
 
 fs.readFileAsync = util.promisify(fs.readFile);
@@ -17,14 +16,10 @@ async function createSingleHtml(src, dst) {
   const dstKey = changeExt(await etag(src), ".html");
   const dstPath = path.join(dst.bucket, dstKey);
   const dstDir = path.dirname(dstPath);
-
-  if (await exists(dstPath)) {
-    debug("skip single to %s", dstPath);
-    return;
-  }
+  const meta = changeExt(await etag(src), ".json");
 
   const template = await fs.readFileAsync("template/single.html", "utf8");
-  const metadata = await parseMetadata(src);
+  const metadata = JSON.parse(await fs.readFileAsync(meta, "utf8"));
   const rendered = mustache.render(template, metadata);
   debug("upload html to %s", dstPath);
   await mkdirp(dstDir);
