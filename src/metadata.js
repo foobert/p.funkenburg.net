@@ -15,6 +15,7 @@ fs.symlinkAsync = util.promisify(fs.symlink);
 
 async function getMtime(filename) {
   let s = await fs.statAsync(filename);
+  debug("mtime: %o", s.mtime);
   return s.mtime;
 }
 
@@ -32,7 +33,8 @@ async function parseMetadata(src) {
 
   const date = img.Properties["exif:DateTimeOriginal"]
     ? moment(img.Properties["exif:DateTimeOriginal"], "YYYY:MM:DD HH:mm:ss")
-    : moment(getMtime(src.path));
+    : moment(await getMtime(src.path));
+  debug("date: %o", date);
   const ratio =
     img.size.width > img.size.height
       ? img.size.height / img.size.width * 100
