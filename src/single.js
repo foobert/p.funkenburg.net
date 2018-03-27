@@ -16,7 +16,7 @@ async function createSingleHtml(src, dst) {
   const dstKey = changeExt(await etag(src), ".html");
   const dstPath = path.join(dst.bucket, dstKey);
   const dstDir = path.dirname(dstPath);
-  const meta = changeExt(await etag(src), ".json");
+  const meta = path.join(dst.bucket, changeExt(await etag(src), ".json"));
 
   const template = await fs.readFileAsync("template/single.html", "utf8");
   const metadata = JSON.parse(await fs.readFileAsync(meta, "utf8"));

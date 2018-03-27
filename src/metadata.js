@@ -12,6 +12,7 @@ fs.writeFileAsync = util.promisify(fs.writeFile);
 fs.statAsync = util.promisify(fs.stat);
 fs.unlinkAsync = util.promisify(fs.unlink);
 fs.symlinkAsync = util.promisify(fs.symlink);
+fs.lstatAsync = util.promisify(fs.lstat);
 
 async function getMtime(filename) {
   let s = await fs.statAsync(filename);
@@ -63,6 +64,15 @@ async function createMetadata(src, dst) {
   const target = label(changeExt(path.basename(src.key), ".json"), "meta");
   const linkPath = path.join(path.dirname(dstPath), target);
   if (!await exists(linkPath)) {
+    debug("symlink does not exist");
+    try {
+      await fs.lstatAsync(linkPath);
+      debug("removing stale symlink %s", linkPath);
+      await fs.unlinkAsync(linkPath);
+    } catch (err) {
+      // ignored
+    }
+    debug("symlinking");
     await fs.symlinkAsync(path.basename(dstPath), linkPath);
   }
 
