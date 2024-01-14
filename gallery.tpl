@@ -1,11 +1,12 @@
+% source $ALBUM/meta.sh
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="../gallery.css"/>
+    <title><% $TITLE %></title>
   </head>
   <body>
-% source $ALBUM/meta.sh
     <div class="container">
       <h1><a href="/">Photos</a> / <% $TITLE %></h1>
       <h2><% $DESCRIPTION %></h2>

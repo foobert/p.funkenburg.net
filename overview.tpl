@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="gallery.css"/>
+    <title>Photos</title>
   </head>
   <body>
     <div class="container">
