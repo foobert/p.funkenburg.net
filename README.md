@@ -1,7 +1,7 @@
 # Photos
 
-The image gallery is based of some simple static HTML files. They are "rendered" using bash-tpl, which is a
-single-binary, bash-based templating language.
+The image gallery is based of some simple static HTML files. They are "rendered" using [bash-tpl](https://github.com/TekWizely/bash-tpl),
+which is a single-binary, bash-based templating language.
 
 ## Building
 
