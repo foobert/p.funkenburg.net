@@ -3,6 +3,8 @@
 The image gallery is based of some simple static HTML files. They are "rendered" using [bash-tpl](https://github.com/TekWizely/bash-tpl),
 which is a single-binary, bash-based templating language.
 
+Design is based off [an article on the logrocket blog](https://blog.logrocket.com/responsive-image-gallery-css-flexbox/).
+
 ## Building
 
 The workflow is driven by generate.sh, which renders the HTML files and also uses image magick to resize the
