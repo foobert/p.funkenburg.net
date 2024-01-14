@@ -1,4 +1,4 @@
-build
-.imgcache
-.cache
-albums
+albums*
+output
+tmp
+.envrc
