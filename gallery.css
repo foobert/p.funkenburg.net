@@ -15,6 +15,7 @@ a,
 a:hover,
 a:visited {
   color: #a25772;
+  text-decoration: none;
 }
 
 @media (prefers-color-scheme: dark) {

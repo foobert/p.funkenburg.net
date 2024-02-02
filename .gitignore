@@ -2,3 +2,4 @@ albums*
 output
 tmp
 .envrc
+.DS_Store

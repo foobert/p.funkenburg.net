@@ -36,7 +36,7 @@ function thumbnail {
   output="output/$2/t_$(basename "$1")"
   if [ ! "$output" -nt "$input" ]; then
     echo "$output"
-    magick "$input" -thumbnail 600 "$output"
+    magick "$input" -thumbnail x300 "$output"
   fi
 }
 
@@ -53,9 +53,24 @@ function generate_album {
 
   name=$(basename "$album")
   ALBUM=$album html gallery "$name/index.html"
-  for image in "$album"/*.{JPG,jpg,JPEG,jpeg,GIF,gif}; do
+  images=("$album"/*.{JPG,jpg,JPEG,jpeg,GIF,gif})
+  images_len=$((${#images[@]}-1))
+  for i in "${!images[@]}"; do 
+    image=${images[$i]}
+    image_basename=$(basename "$image")
     thumbnail "$image" "$name"
-    copy "$image" "$name/$(basename "$image")"
+    copy "$image" "$name/$image_basename"
+    if [ "$i" -gt 0 ]; then
+      prev=$(basename "${images[$((i-1))]}")
+    else
+      prev=""
+    fi
+    if [ "$i" -lt $images_len ]; then
+      next=$(basename "${images[$((i+1))]}")
+    else
+      next=""
+    fi
+    ALBUM=$album IMAGE=$image_basename POS=$i LEN=$images_len PREV=$prev NEXT=$next UP=$name html image "$name/${image_basename%.*}.html"
   done
 }
 
@@ -63,9 +78,11 @@ export ALBUMS=albums
 
 tpl overview
 tpl gallery
+tpl image
 
 html overview index.html
 copy gallery.css gallery.css
+copy image.css image.css
 copy favicon.ico favicon.ico
 
 echo -n "."
